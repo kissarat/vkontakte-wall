@@ -43,17 +43,31 @@ export default class App extends Component {
     })
   }
 
-  attachments(photos) {
-    if (photos instanceof Array) {
-      const images = []
-      photos.forEach(function ({type, photo}) {
-        if ('photo' === type) {
-          images.push(<a key={photo.pid} href={photo.src_xxbig} target="_blank">
-            <img src={photo.src_small}/>
-          </a>)
+  attachments(files) {
+    if (files instanceof Array) {
+      const list = []
+      files.forEach(function ({type, photo, link}) {
+        switch (type) {
+          case 'photo':
+            list.push(<a key={photo.pid} href={photo.src_xxbig} target="_blank">
+              <img src={photo.src_small}/>
+            </a>)
+            break
+          case 'link':
+            list.push(<a
+              key={link.url}
+              href={link.url}
+              title={link.description}
+              target="_blank">
+              <figure>
+                <img src={link.image_src}/>
+                <figcaption>{link.title}</figcaption>
+              </figure>
+            </a>)
+            break
         }
       })
-      return images
+      return list
     }
   }
 
