@@ -10,7 +10,7 @@ import {Router, Route, IndexRoute, hashHistory} from 'react-router'
 const router = <Router history={hashHistory}>
   <Route path='/' component={App}>
     <IndexRoute component={Welcome}/>
-    <Route path="page/:domain" component={Page} />
+    <Route path="page/:domain/:offset" component={Page} />
   </Route>
 </Router>
 

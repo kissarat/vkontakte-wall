@@ -13,13 +13,13 @@ export default class App extends Component {
 
   items() {
     const items = []
-    for(const id in this.state) {
-      const name = this.state[id]
+    for(const domain in this.state) {
+      const name = this.state[domain]
       items.push(<Menu.Item
         as={Link}
         name={name}
-        key={id}
-        to={'/page/' + id}/>)
+        key={domain}
+        to={`/page/${domain}/0`}/>)
     }
     return items
   }

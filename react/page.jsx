@@ -1,5 +1,7 @@
 import React, {Component} from 'react'
-import {List} from 'semantic-ui-react'
+import {List, Icon} from 'semantic-ui-react'
+import {pick, defaults, isEqual} from 'lodash'
+import {Link} from 'react-router'
 
 function jsonp(method, params = {}, callback) {
   params.callback = 'jsonp' + Date.now()
@@ -16,23 +18,28 @@ function jsonp(method, params = {}, callback) {
   }
 }
 
+const emptyPageState = {
+  count: 0,
+  posts: [],
+  limit: 100
+}
+
 export default class App extends Component {
-  state = {
-    count: 0,
-    posts: []
-  }
+  state = emptyPageState
 
   componentDidMount() {
     void this.load(this.props.params)
   }
 
   componentWillReceiveProps(props) {
-    if (this.props.params.domain != props.params.domain) {
+    if (!isEqual(this.props.params, props.params)) {
       void this.load(props.params)
     }
   }
 
   load(params) {
+    params.limit = this.state.limit
+    // this.setState(emptyPageState)
     jsonp('wall.get', params, ({response}) => {
       if (response instanceof Array) {
         this.setState({
@@ -65,6 +72,9 @@ export default class App extends Component {
               </figure>
             </a>)
             break
+          default:
+            // console.warn(`Unknown attachment type "${type}"`, arguments[0])
+            break
         }
       })
       return list
@@ -82,9 +92,36 @@ export default class App extends Component {
     </List.Item>)
   }
 
+  paginator() {
+    const navigation = []
+    const {offset, domain, limit} = this.props.params
+    const {count} = this.state
+    const left = +offset - limit
+    const right = +offset + limit
+    if (offset > 0) {
+      navigation.push(<Link key="left" to={`/page/${domain}/${left}`}>
+        <Icon name="arrow circle left" size="big"/>
+      </Link>)
+    }
+    if (count > 0) {
+      const number = 1 + Math.floor(offset / limit)
+      const size = 1 + Math.floor(count / limit)
+      navigation.push(<span key="number">{number} из {size}</span>)
+    }
+    if (right < count) {
+      navigation.push(<Link key="right" to={`/page/${domain}/${right}`}>
+        <Icon name="arrow circle right" size="big"/>
+      </Link>)
+    }
+    return <div>{navigation}</div>
+  }
+
   render() {
     return <List className="page">
-      {this.posts()}
+      {this.paginator()}
+      <div>
+        {this.posts()}
+      </div>
     </List>
   }
 }
