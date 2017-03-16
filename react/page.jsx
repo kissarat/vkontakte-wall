@@ -4,7 +4,7 @@ import {List} from 'semantic-ui-react'
 function jsonp(method, params = {}, callback) {
   params.callback = 'jsonp' + Date.now()
   const querystring = []
-  for(const key in params) {
+  for (const key in params) {
     querystring.push(key + '=' + params[key])
   }
   const script = document.createElement('script')
@@ -43,10 +43,27 @@ export default class App extends Component {
     })
   }
 
+  attachments(photos) {
+    if (photos instanceof Array) {
+      const images = []
+      photos.forEach(function ({type, photo}) {
+        if ('photo' === type) {
+          images.push(<a key={photo.pid} href={photo.src_xxbig} target="_blank">
+            <img src={photo.src_small}/>
+          </a>)
+        }
+      })
+      return images
+    }
+  }
+
   posts() {
     return this.state.posts.map(post => <List.Item key={post.id}>
       <List.Content>
-        <div dangerouslySetInnerHTML={{__html: post.text}}/>
+        <div>
+          <div dangerouslySetInnerHTML={{__html: post.text}}/>
+          {this.attachments(post.attachments)}
+        </div>
       </List.Content>
     </List.Item>)
   }
