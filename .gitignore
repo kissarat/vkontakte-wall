@@ -1,5 +1,5 @@
 .idea/
 node_modules/
-public/gay.js
+public/gay.js*
 .DS_Store
 cd
