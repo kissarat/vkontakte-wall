@@ -1,7 +1,9 @@
 import React, {Component} from 'react'
 import {List, Icon} from 'semantic-ui-react'
-import {pick, defaults, isEqual} from 'lodash'
+import {pick, merge, defaults, isEqual} from 'lodash'
 import {Link} from 'react-router'
+
+const infinite = false
 
 function jsonp(method, params = {}, callback) {
   params.callback = 'jsonp' + Date.now()
@@ -21,7 +23,8 @@ function jsonp(method, params = {}, callback) {
 const emptyPageState = {
   count: 0,
   posts: [],
-  limit: 100
+  limit: 100,
+  offset: 0
 }
 
 export default class App extends Component {
@@ -39,12 +42,12 @@ export default class App extends Component {
 
   load(params) {
     params.limit = this.state.limit
-    // this.setState(emptyPageState)
     jsonp('wall.get', params, ({response}) => {
       if (response instanceof Array) {
+        const posts = response.slice(1)
         this.setState({
           count: response[0],
-          posts: response.slice(1),
+          posts: infinite ? this.state.posts.concat(posts) : posts,
         })
       }
     })
@@ -98,30 +101,39 @@ export default class App extends Component {
     const {count} = this.state
     const left = +offset - limit
     const right = +offset + limit
-    if (offset > 0) {
-      navigation.push(<Link key="left" to={`/page/${domain}/${left}`}>
-        <Icon name="arrow circle left" size="big"/>
-      </Link>)
+    if (infinite && right < count) {
+      navigation.push(<Icon
+        key="more"
+        name="arrow circle down"
+        size="huge"
+        onClick={() => this.load(merge(this.props.params, {offset: right}))}/>)
     }
-    if (count > 0) {
-      const number = 1 + Math.floor(offset / limit)
-      const size = 1 + Math.floor(count / limit)
-      navigation.push(<span key="number">{number} из {size}</span>)
-    }
-    if (right < count) {
-      navigation.push(<Link key="right" to={`/page/${domain}/${right}`}>
-        <Icon name="arrow circle right" size="big"/>
-      </Link>)
+    else {
+      if (offset > 0) {
+        navigation.push(<Link key="left" to={`/page/${domain}/${left}`}>
+          <Icon name="arrow circle left" size="big"/>
+        </Link>)
+      }
+      if (count > 0) {
+        const number = 1 + Math.floor(offset / limit)
+        const size = 1 + Math.floor(count / limit)
+        navigation.push(<span key="number">{number} из {size}</span>)
+      }
+      if (right < count) {
+        navigation.push(<Link key="right" to={`/page/${domain}/${right}`}>
+          <Icon name="arrow circle right" size="big"/>
+        </Link>)
+      }
     }
     return <div>{navigation}</div>
   }
 
   render() {
     return <List className="page">
-      {this.paginator()}
       <div>
         {this.posts()}
       </div>
+      {this.paginator()}
     </List>
   }
 }
