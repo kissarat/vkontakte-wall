@@ -109,15 +109,17 @@ export default class App extends Component {
         onClick={() => this.load(merge(this.props.params, {offset: right}))}/>)
     }
     else {
+      const leftIcon = <Icon name="arrow circle left" size="big"/>
       if (offset > 0) {
-        navigation.push(<Link key="left" to={`/page/${domain}/${left}`}>
-          <Icon name="arrow circle left" size="big"/>
-        </Link>)
+        navigation.push(<Link key="left" to={`/page/${domain}/${left}`}>{leftIcon}</Link>)
+      }
+      else {
+        navigation.push(leftIcon)
       }
       if (count > 0) {
         const number = 1 + Math.floor(offset / limit)
         const size = 1 + Math.floor(count / limit)
-        navigation.push(<span key="number">{number} из {size}</span>)
+        navigation.push(<span key="number" className="number">{number} из {size}</span>)
       }
       if (right < count) {
         navigation.push(<Link key="right" to={`/page/${domain}/${right}`}>
@@ -125,12 +127,12 @@ export default class App extends Component {
         </Link>)
       }
     }
-    return <div>{navigation}</div>
+    return <div className="paginator">{navigation}</div>
   }
 
   render() {
     return <List className="page">
-      <div>
+      <div className="post-list">
         {this.posts()}
       </div>
       {this.paginator()}
