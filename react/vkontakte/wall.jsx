@@ -1,23 +1,13 @@
 import React, {Component} from 'react'
+import {Link} from 'react-router'
 import {List, Icon} from 'semantic-ui-react'
 import {pick, merge, defaults, isEqual} from 'lodash'
-import {Link} from 'react-router'
+import {jsonp} from '../utils.jsx'
 
 const infinite = false
 
-function jsonp(method, params = {}, callback) {
-  params.callback = 'jsonp' + Date.now()
-  const querystring = []
-  for (const key in params) {
-    querystring.push(key + '=' + params[key])
-  }
-  const script = document.createElement('script')
-  script.src = 'https://api.vk.com/method/wall.get?' + querystring.join('&')
-  document.head.appendChild(script)
-  window[params.callback] = function () {
-    callback.apply(this, arguments)
-    script.remove()
-  }
+function vk(method, params = {}) {
+  return jsonp('https://api.vk.com/method/' + method, params)
 }
 
 const emptyPageState = {
@@ -27,7 +17,7 @@ const emptyPageState = {
   offset: 0
 }
 
-export default class App extends Component {
+export default class Wall extends Component {
   state = emptyPageState
 
   componentDidMount() {

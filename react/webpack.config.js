@@ -3,8 +3,7 @@ module.exports = {
   devtool: 'source-map',
   output: {
     path: __dirname + '/../public',
-    filename: 'gay.js',
-    comments: false
+    filename: 'gay.js'
   },
   module: {
     loaders: [
@@ -15,7 +14,7 @@ module.exports = {
       {
         test: /\.jsx$/,
         exclude: /(node_modules)/,
-        loader: 'babel',
+        loader: 'babel-loader',
         query: {
           presets: [
             'es2015',
@@ -29,8 +28,6 @@ module.exports = {
       }
     ]
   },
-  resolve: {
-    modulesDirectories: [__dirname + '/../node_modules']
-  },
+  resolve: {},
   plugins: []
 }
