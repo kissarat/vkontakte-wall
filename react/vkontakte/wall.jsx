@@ -30,17 +30,17 @@ export default class Wall extends Component {
     }
   }
 
-  load(params) {
+  async load(params) {
     params.limit = this.state.limit
-    jsonp('wall.get', params, ({response}) => {
-      if (response instanceof Array) {
-        const posts = response.slice(1)
-        this.setState({
-          count: response[0],
-          posts: infinite ? this.state.posts.concat(posts) : posts,
-        })
-      }
-    })
+    const {response} = await
+    vk('wall.get', params)
+    if (response instanceof Array) {
+      const posts = response.slice(1)
+      this.setState({
+        count: response[0],
+        posts: infinite ? this.state.posts.concat(posts) : posts,
+      })
+    }
   }
 
   attachments(files) {

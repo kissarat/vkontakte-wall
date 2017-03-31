@@ -1,7 +1,8 @@
 import React, {Component} from 'react'
-import {Table} from 'semantic-ui-react'
+import Refresh from '../refresh.jsx'
 import {jsonp} from '../utils.jsx'
 import {pick} from 'lodash'
+import {Table, Segment} from 'semantic-ui-react'
 
 function blockio(method, params = {}) {
   return jsonp(`https://www.block.io/api/v2/${method}/`, params)
@@ -52,18 +53,22 @@ export default class TransactionList extends Component {
   }
 
   render() {
-    return <Table selectable>
-      <Table.Header>
-        <Table.Row>
-          <Table.HeaderCell>Время</Table.HeaderCell>
-          <Table.HeaderCell>Сумма</Table.HeaderCell>
-          <Table.HeaderCell>Отправитель</Table.HeaderCell>
-          <Table.HeaderCell>Подтверждений</Table.HeaderCell>
-          <Table.HeaderCell>Получатель</Table.HeaderCell>
-          <Table.HeaderCell>Транзакция</Table.HeaderCell>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>{this.rows()}</Table.Body>
-    </Table>
+    return <Segment className="page transaction-list">
+      <Refresh refresh={() => this.load(this.props.params)}/>
+      <h1>Транзакции</h1>
+      <Table selectable>
+        <Table.Header>
+          <Table.Row>
+            <Table.HeaderCell>Время</Table.HeaderCell>
+            <Table.HeaderCell>Сумма</Table.HeaderCell>
+            <Table.HeaderCell>Отправитель</Table.HeaderCell>
+            <Table.HeaderCell>Подтверждений</Table.HeaderCell>
+            <Table.HeaderCell>Получатель</Table.HeaderCell>
+            <Table.HeaderCell>Транзакция</Table.HeaderCell>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>{this.rows()}</Table.Body>
+      </Table>
+    </Segment>
   }
 }
