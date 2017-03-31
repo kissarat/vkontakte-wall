@@ -1,12 +1,13 @@
 import React, {Component} from 'react'
-import {List, Icon} from 'semantic-ui-react'
-import {pick, merge, defaults, isEqual} from 'lodash'
+import {Feed, Icon} from 'semantic-ui-react'
+import {pick, merge, defaults, isEqual, uniq} from 'lodash'
 import {Link} from 'react-router'
 
 const infinite = false
 
-function jsonp(method, params = {}, callback) {
-  params.callback = 'jsonp' + Date.now()
+function jsonp(method, params = {}) {
+  params.callback = 'vk' + ++jsonp.number
+  params.v = '5.8'
   const querystring = []
   for (const key in params) {
     querystring.push(key + '=' + params[key])
@@ -14,10 +15,55 @@ function jsonp(method, params = {}, callback) {
   const script = document.createElement('script')
   script.src = 'https://api.vk.com/method/wall.get?' + querystring.join('&')
   document.head.appendChild(script)
-  window[params.callback] = function () {
-    callback.apply(this, arguments)
-    script.remove()
+  return new Promise(function (resolve) {
+    window[params.callback] = function (data) {
+      resolve(data)
+      script.remove()
+      delete window[params.callback]
+    }
+  })
+}
+
+jsonp.number = 0
+window.members = {}
+
+function assignMembers(posts, property) {
+  const idProperty = property + '_id'
+  const need = []
+  posts.forEach(function (post) {
+    const id = post[idProperty]
+    const user = members[id]
+    if (user) {
+      post[property] = user
+    }
+    else {
+      need.push(id)
+    }
+  })
+  return need
+}
+
+function loadMembers(posts) {
+  const need = assignMembers(posts)
+  const promises = []
+  if (need.length > 0) {
+    const users_ids = uniq(need.filter(id => id > 0)).join(',')
+    if (users_ids.length > 0) {
+      promises.push(jsonp('users.get', {users_ids, fields: 'domain,online,photo_50,photo_100'}))
+    }
+    const group_ids = uniq(need.filter(id => id < 0).map(id => -id)).join(',')
+    if (users_ids.length > 0) {
+      promises.push(jsonp('groups.getById', {group_ids, fields: 'cover'}))
+    }
   }
+  return Promise.all(promises).then(function (rs) {
+    rs.forEach(function ({response}) {
+      response.forEach(function (member) {
+        members['number' === typeof member.online ? member.id : -member.id] = member
+      })
+    })
+    assignMembers(posts)
+  })
 }
 
 const emptyPageState = {
@@ -40,17 +86,17 @@ export default class App extends Component {
     }
   }
 
-  load(params) {
+  async load(params) {
     params.limit = this.state.limit
-    jsonp('wall.get', params, ({response}) => {
-      if (response instanceof Array) {
-        const posts = response.slice(1)
-        this.setState({
-          count: response[0],
-          posts: infinite ? this.state.posts.concat(posts) : posts,
-        })
-      }
-    })
+    const {response, count} = await jsonp('wall.get', params)
+    if (response instanceof Array) {
+      this.setState({
+        count,
+        posts: infinite ? this.state.posts.concat(response) : response,
+      })
+      await loadMembers(response)
+      this.setState({membersLoaded: true})
+    }
   }
 
   attachments(files) {
@@ -85,14 +131,20 @@ export default class App extends Component {
   }
 
   posts() {
-    return this.state.posts.map(post => <List.Item key={post.id}>
-      <List.Content>
-        <div>
+    return this.state.posts.map(post => <Feed.Event key={post.id}>
+      <Feed.Label/>
+      <Feed.Content>
+        <Feed.Summary>
+          <Feed.Date>{new Date(post.date * 1000).toLocaleString()}</Feed.Date>
+        </Feed.Summary>
+        <Feed.Extra>
           <div dangerouslySetInnerHTML={{__html: post.text}}/>
-          {this.attachments(post.attachments)}
-        </div>
-      </List.Content>
-    </List.Item>)
+          <div className="attachments">
+            {this.attachments(post.attachments)}
+          </div>
+        </Feed.Extra>
+      </Feed.Content>
+    </Feed.Event>)
   }
 
   paginator() {
@@ -131,11 +183,11 @@ export default class App extends Component {
   }
 
   render() {
-    return <List className="page">
+    return <Feed className="page">
       <div className="post-list">
         {this.posts()}
       </div>
       {this.paginator()}
-    </List>
+    </Feed>
   }
 }
