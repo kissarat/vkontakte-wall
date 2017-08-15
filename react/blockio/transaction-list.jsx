@@ -47,7 +47,7 @@ export default class TransactionList extends Component {
       <Table.Cell>{t.confirmations}</Table.Cell>
       <Table.Cell className="monospace">{t.receiver}</Table.Cell>
       <Table.Cell className="monospace">
-        <a href={'https://chain.so/tx/BTC/' + t.txid}>{t.txid}</a>
+        <a href={'https://www.blocktrail.com/tBTC/tx/' + t.txid}>{t.txid}</a>
       </Table.Cell>
     </Table.Row>)
   }
